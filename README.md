@@ -66,6 +66,10 @@ pip install pandas numpy scikit-learn xgboost shap streamlit matplotlib
 
 streamlit run app.py
 
+\## Scope
+
+MerchantGuard AI is strictly a \*\*defensive risk-scoring tool\*\*. It flags merchant behavior for human review — it does not take autonomous action, block transactions, or make final decisions. All outputs are advisory signals for a risk analyst.
+
 
 
 \## Author

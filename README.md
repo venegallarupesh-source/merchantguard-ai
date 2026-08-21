@@ -1,5 +1,7 @@
 \# 🛡️ MerchantGuard AI
 
+🔗 Live Demo: https://merchantguard-ai-dzdzbaghveokmqdi5ytwop.streamlit.app/
+
 
 
 \*\*Explainable AI-powered merchant risk scoring system\*\* — built for Razorpay's AI Buildathon 2026 (AI Risk Manager track).

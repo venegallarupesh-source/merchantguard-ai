@@ -66,6 +66,36 @@ pip install pandas numpy scikit-learn xgboost shap streamlit matplotlib
 
 streamlit run app.py
 
+\## Model Performance (Held-Out Test Set)
+
+Evaluated on a stratified 80/20 train/test split (400 test merchants, unseen during training):
+
+
+
+| Metric | Not Risky | Risky |
+
+|---|---|---|
+
+| Precision | 0.93 | 0.80 |
+
+| Recall | 0.92 | 0.82 |
+
+| F1-score | 0.92 | 0.81 |
+
+
+
+\- \*\*Overall accuracy:\*\* 89%
+
+\- \*\*ROC-AUC:\*\* 0.949
+
+\- \*\*False positive rate:\*\* 8.4% (24 of 285 legitimate merchants wrongly flagged)
+
+\- \*\*False negative rate:\*\* 18.3% (21 of 115 risky merchants missed)
+
+
+
+\*\*Honest take:\*\* The model favors precision over full recall — it misses about 1 in 5 risky merchants rather than over-flagging legitimate ones. In a production system, this threshold would be tuned based on the real cost of a false positive (blocking a good merchant) vs. a false negative (letting fraud through).
+
 \## Edge Case Testing
 
 The model was stress-tested against deliberately unusual merchant profiles:

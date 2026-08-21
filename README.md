@@ -54,6 +54,8 @@ Python, XGBoost, SHAP, Streamlit, Pandas, Scikit-learn
 
 \- Fully explainable - every prediction traceable to specific behavioral signals
 
+\- \*\*False-positive cost:\*\* Every wrongly-flagged safe merchant means delayed payouts and manual review overhead — the model is tuned to balance catching real risk against this business cost, not maximize accuracy alone.
+
 
 
 \## Run It Locally

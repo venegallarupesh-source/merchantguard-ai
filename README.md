@@ -1,14 +1,60 @@
-\# MerchantGuard AI
+\# 🛡️ MerchantGuard AI
 
 
 
-An explainable AI risk-scoring system that flags merchants likely to default,
-
-generate chargebacks, or show fraudulent transaction patterns — built for
-
-Razorpay's AI Buildathon 2026.
+\*\*Explainable AI-powered merchant risk scoring system\*\* — built for Razorpay's AI Buildathon 2026 (AI Risk Manager track).
 
 
 
-\## Status: In development
+\## The Problem
+
+Payment platforms like Razorpay onboard thousands of merchants. Some pose risk — high refund rates, sudden volume spikes, chargeback patterns — that can lead to fraud, defaults, or financial loss. Manually reviewing every merchant doesn't scale.
+
+
+
+\## The Solution
+
+MerchantGuard AI scores every merchant's risk (0-100) using transaction behavior, and explains why each score was given, not just what it is.
+
+
+
+\## How It Works
+
+1\. Data - Merchant transaction data (volume, refund rate, chargeback rate, account age, category, growth patterns)
+
+2\. Model - XGBoost classifier trained to predict risk (ROC-AUC: 0.95)
+
+3\. Explainability - SHAP values break down exactly which factors drove each merchant's score
+
+4\. Dashboard - Interactive Streamlit app to browse, filter, and explain any merchant's risk in real time
+
+
+
+\## Tech Stack
+
+Python, XGBoost, SHAP, Streamlit, Pandas, Scikit-learn
+
+
+
+\## Results
+
+\- 0.95 ROC-AUC on held-out test data
+
+\- 82% recall on risky merchants
+
+\- Fully explainable - every prediction traceable to specific behavioral signals
+
+
+
+\## Run It Locally
+
+pip install pandas numpy scikit-learn xgboost shap streamlit matplotlib
+
+streamlit run app.py
+
+
+
+\## Author
+
+Built solo by Rupesh for Razorpay AI Buildathon 2026.
 

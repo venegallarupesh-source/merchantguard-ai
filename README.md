@@ -66,6 +66,18 @@ pip install pandas numpy scikit-learn xgboost shap streamlit matplotlib
 
 streamlit run app.py
 
+\## Edge Case Testing
+
+The model was stress-tested against deliberately unusual merchant profiles:
+
+\- Correctly flagged a brand-new account with a suspicious volume spike (0.82 risk)
+
+\- Correctly flagged a long-trusted merchant with one genuinely bad month (0.95 risk)
+
+\- Correctly passed a "high-risk category" (Crypto/Trading) merchant with clean behavior — confirming the model judges actual behavior, not category stereotypes
+
+\- \*\*Known limitation:\*\* Dormant, zero-activity merchants score as low-risk. In production, this would need a separate "sleeper account" monitoring layer, since fraud rings sometimes hold accounts inactive before use.
+
 \## Scope
 
 MerchantGuard AI is strictly a \*\*defensive risk-scoring tool\*\*. It flags merchant behavior for human review — it does not take autonomous action, block transactions, or make final decisions. All outputs are advisory signals for a risk analyst.

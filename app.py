@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import shap
 import matplotlib.pyplot as plt
+from dormancy_check import flag_dormant_accounts
 
 st.set_page_config(page_title="MerchantGuard AI", layout="wide")
 
@@ -23,6 +24,7 @@ def load_data():
 model, le, feature_cols = load_assets()
 df = load_data()
 df['business_category_encoded'] = le.transform(df['business_category'])
+df = flag_dormant_accounts(df)
 X = df[feature_cols]
 
 explainer = shap.TreeExplainer(model)
@@ -48,6 +50,14 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Total Merchants", len(df))
 col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
 col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
+st.divider()
+st.subheader("😴 Dormant / Sleeper Account Risk")
+st.caption("Established accounts with unusually low recent activity — a pattern the main ML model doesn't catch, since it's trained on behavioral risk, not inactivity.")
+dormant_df = df[df['is_dormant_risk']][['merchant_id', 'business_category', 'account_age_days', 'monthly_txn_count', 'volume_growth_rate_30d']]
+if len(dormant_df) > 0:
+    st.dataframe(dormant_df, use_container_width=True)
+else:
+    st.write("No dormant accounts flagged in current data.")
 
 st.divider()
 

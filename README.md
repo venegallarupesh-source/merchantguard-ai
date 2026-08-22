@@ -28,17 +28,17 @@ MerchantGuard AI scores every merchant's risk (0-100) using transaction behavior
 
 \## How It Works
 
-\## How It Works
+1\. \*\*Data\*\* — Merchant transaction data (volume, refund rate, chargeback rate, account age, category, growth patterns)
 
-1\. Data - Merchant transaction data (volume, refund rate, chargeback rate, account age, category, growth patterns)
+2\. \*\*Model\*\* — XGBoost classifier trained to predict risk (ROC-AUC: 0.95), benchmarked against Random Forest using 5-fold cross-validation
 
-2\. Model - XGBoost classifier trained to predict risk (ROC-AUC: 0.95)
+3\. \*\*Explainability\*\* — SHAP values break down exactly which factors drove each merchant's score, shown both technically and in plain English
 
-3\. Explainability - SHAP values break down exactly which factors drove each merchant's score
+4\. \*\*Decision Engine\*\* — Converts raw risk scores into clear recommended actions (Approve / Monitor / Manual Review / Enhanced Investigation), with business-rule escalation for extreme chargeback patterns
 
-4\. Dashboard - Interactive Streamlit app to browse, filter, and explain any merchant's risk in real time
+5\. \*\*Live Risk Check\*\* — Enter any new merchant's details and get an instant score, explanation, and recommended action — not limited to pre-loaded data
 
-
+6\. \*\*Business Impact Dashboard\*\* — Interactive threshold slider showing the real trade-off between catching risk and generating false alarms, tied to estimated business cost
 
 \## Tech Stack
 

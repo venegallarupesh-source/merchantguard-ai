@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import shap
 import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
 from decision_engine import get_risk_level, get_recommended_action
 
 st.set_page_config(page_title="MerchantGuard AI", layout="wide")
@@ -30,22 +31,7 @@ explainer = shap.TreeExplainer(model)
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable merchant risk scoring for Razorpay AI Buildathon 2026")
 
-st.sidebar.header("Filters")
-risk_filter = st.sidebar.selectbox("Show merchants", ["All", "Risky only", "Safe only"])
-category_filter = st.sidebar.multiselect("Business category", df['business_category'].unique())
-
-filtered_df = df.copy()
-if risk_filter == "Risky only":
-    filtered_df = filtered_df[filtered_df['is_risky'] == 1]
-elif risk_filter == "Safe only":
-    filtered_df = filtered_df[filtered_df['is_risky'] == 0]
-if category_filter:
-    filtered_df = filtered_df[filtered_df['business_category'].isin(category_filter)]
-
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Merchants", len(df))
-col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
-col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
+# ---------------- LIVE MERCHANT RISK CHECK ----------------
 st.divider()
 st.subheader("🆕 Live Merchant Risk Check")
 st.caption("Enter a new merchant's details to get an instant risk assessment")
@@ -110,12 +96,33 @@ if submitted:
         ax.set_title('Why this merchant was scored this way')
         plt.tight_layout()
         st.pyplot(fig)
+
+# ---------------- MERCHANT OVERVIEW ----------------
 st.divider()
 st.subheader("Merchant Risk Overview")
+
+st.sidebar.header("Filters")
+risk_filter = st.sidebar.selectbox("Show merchants", ["All", "Risky only", "Safe only"])
+category_filter = st.sidebar.multiselect("Business category", df['business_category'].unique())
+
+filtered_df = df.copy()
+if risk_filter == "Risky only":
+    filtered_df = filtered_df[filtered_df['is_risky'] == 1]
+elif risk_filter == "Safe only":
+    filtered_df = filtered_df[filtered_df['is_risky'] == 0]
+if category_filter:
+    filtered_df = filtered_df[filtered_df['business_category'].isin(category_filter)]
+
+col1, col2, col3 = st.columns(3)
+col1.metric("Total Merchants", len(df))
+col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
+col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
+
 display_cols = ['merchant_id', 'business_category', 'account_age_days',
                  'monthly_txn_volume', 'refund_rate', 'chargeback_rate', 'risk_score', 'is_risky']
 st.dataframe(filtered_df[display_cols].sort_values('risk_score', ascending=False), use_container_width=True)
 
+# ---------------- EXPLAIN A SPECIFIC MERCHANT ----------------
 st.divider()
 st.subheader("🔍 Explain a Specific Merchant")
 selected_merchant = st.selectbox("Select merchant ID", filtered_df['merchant_id'].tolist())
@@ -159,6 +166,56 @@ if selected_merchant:
         top_factor = impact_df.iloc[0]
         direction = "increased" if top_factor['Impact on Risk'] > 0 else "decreased"
         st.write(f"The biggest driver was **{top_factor['Feature']}** (value: {top_factor['Value']:.2f}), which **{direction}** this merchant's risk score the most.")
+
+# ---------------- BUSINESS IMPACT ----------------
+st.divider()
+st.subheader("📈 Business Impact: Threshold Trade-off")
+st.caption("Adjust the risk threshold to see the trade-off between catching risk and false alarms")
+
+@st.cache_data
+def get_test_predictions():
+    df2 = pd.read_csv('merchant_data.csv')
+    df2['business_category_encoded'] = le.transform(df2['business_category'])
+    X2 = df2[feature_cols]
+    y2 = df2['is_risky']
+    X_train2, X_test2, y_train2, y_test2 = train_test_split(X2, y2, test_size=0.2, random_state=42, stratify=y2)
+    proba2 = model.predict_proba(X_test2)[:, 1]
+    return y_test2.values, proba2
+
+y_test_vals, proba_vals = get_test_predictions()
+
+threshold_slider = st.slider("Risk Threshold", 0.05, 0.95, 0.13, 0.01)
+
+pred_at_threshold = (proba_vals >= threshold_slider).astype(int)
+tp = int(np.sum((pred_at_threshold == 1) & (y_test_vals == 1)))
+fp = int(np.sum((pred_at_threshold == 1) & (y_test_vals == 0)))
+fn = int(np.sum((pred_at_threshold == 0) & (y_test_vals == 1)))
+tn = int(np.sum((pred_at_threshold == 0) & (y_test_vals == 0)))
+
+COST_FN = 50000
+COST_FP = 2000
+total_cost = fn * COST_FN + fp * COST_FP
+
+bc1, bc2, bc3, bc4 = st.columns(4)
+bc1.metric("Risky Merchants Caught", tp)
+bc2.metric("False Alarms", fp)
+bc3.metric("Risky Merchants Missed", fn)
+bc4.metric("Estimated Cost", f"₹{total_cost:,.0f}")
+
+st.markdown(f"""
+**At this threshold ({threshold_slider:.2f}):**
+- {tp} genuinely risky merchants are correctly caught
+- {fp} safe merchants are wrongly flagged (manual review overhead)
+- {fn} risky merchants are missed (potential fraud/default loss)
+- Estimated total business cost: **₹{total_cost:,.0f}** (assuming ₹50,000 per missed risk, ₹2,000 per false alarm)
+""")
+
+if threshold_slider < 0.15:
+    st.info("Lower threshold: catches more risk, but generates more manual review workload.")
+elif threshold_slider > 0.5:
+    st.warning("Higher threshold: less workload, but risk of missing genuinely risky merchants increases.")
+else:
+    st.success("This range balances detection against review workload reasonably well.")
 
 st.divider()
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

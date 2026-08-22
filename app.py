@@ -31,7 +31,6 @@ explainer = shap.TreeExplainer(model)
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable merchant risk scoring for Razorpay AI Buildathon 2026")
 
-# ---------------- LIVE MERCHANT RISK CHECK ----------------
 st.divider()
 st.subheader("🆕 Live Merchant Risk Check")
 st.caption("Enter a new merchant's details to get an instant risk assessment")
@@ -53,6 +52,23 @@ with st.form("live_check_form"):
     submitted = st.form_submit_button("🔍 ANALYZE MERCHANT")
 
 if submitted:
+    validation_errors = []
+    if in_refund_rate > 1.0 or in_refund_rate < 0:
+        validation_errors.append("Refund rate must be between 0 and 1.")
+    if in_chargeback_rate > 1.0 or in_chargeback_rate < 0:
+        validation_errors.append("Chargeback rate must be between 0 and 1.")
+    if in_txn_count <= 0:
+        validation_errors.append("Transaction count must be greater than 0.")
+    if in_avg_value <= 0:
+        validation_errors.append("Average transaction value must be greater than 0.")
+    if in_age < 0:
+        validation_errors.append("Account age cannot be negative.")
+
+    if validation_errors:
+        for err in validation_errors:
+            st.error(f"⚠️ {err}")
+        st.stop()
+
     new_merchant = pd.DataFrame([{
         'business_category': in_category,
         'account_age_days': in_age,
@@ -99,7 +115,6 @@ if submitted:
         plt.tight_layout()
         st.pyplot(fig)
 
-# ---------------- MERCHANT OVERVIEW ----------------
 st.divider()
 st.subheader("Merchant Risk Overview")
 
@@ -124,7 +139,6 @@ display_cols = ['merchant_id', 'business_category', 'account_age_days',
                  'monthly_txn_volume', 'refund_rate', 'chargeback_rate', 'risk_score', 'is_risky']
 st.dataframe(filtered_df[display_cols].sort_values('risk_score', ascending=False), use_container_width=True)
 
-# ---------------- EXPLAIN A SPECIFIC MERCHANT ----------------
 st.divider()
 st.subheader("🔍 Explain a Specific Merchant")
 selected_merchant = st.selectbox("Select merchant ID", filtered_df['merchant_id'].tolist())
@@ -171,7 +185,6 @@ if selected_merchant:
         direction = "increased" if top_factor['Impact on Risk'] > 0 else "decreased"
         st.write(f"The biggest driver was **{top_factor['Feature']}** (value: {top_factor['Value']:.2f}), which **{direction}** this merchant's risk score the most.")
 
-# ---------------- BUSINESS IMPACT ----------------
 st.divider()
 st.subheader("📈 Business Impact: Threshold Trade-off")
 st.caption("Adjust the risk threshold to see the trade-off between catching risk and false alarms")

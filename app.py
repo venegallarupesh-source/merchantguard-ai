@@ -70,13 +70,15 @@ if submitted:
     proba = model.predict_proba(new_X)[0, 1]
     new_score = proba * 100
     level, level_emoji = get_risk_level(new_score)
-    action, action_emoji, reason = get_recommended_action(new_score, in_chargeback_rate)
+    action, action_emoji, reason, is_border = get_recommended_action(new_score, in_chargeback_rate)
 
     rc1, rc2 = st.columns([1, 2])
     with rc1:
         st.metric("Risk Score", f"{new_score:.1f}/100")
         st.write(f"**Risk Level:** {level_emoji} {level}")
         st.markdown("---")
+        if is_border:
+            st.warning("⚠️ Borderline case - lower model confidence")
         st.markdown(f"### {action_emoji} Recommended Action")
         st.markdown(f"## {action}")
         st.caption(reason)
@@ -132,7 +134,7 @@ if selected_merchant:
     merchant_row = df.loc[idx]
 
     risk_level, level_emoji = get_risk_level(merchant_row['risk_score'])
-    action, action_emoji, reason = get_recommended_action(merchant_row['risk_score'], merchant_row['chargeback_rate'])
+    action, action_emoji, reason, is_border = get_recommended_action(merchant_row['risk_score'], merchant_row['chargeback_rate'])
 
     col1, col2 = st.columns([1, 2])
     with col1:
@@ -142,6 +144,8 @@ if selected_merchant:
         st.write(f"**Account Age:** {merchant_row['account_age_days']} days")
 
         st.markdown("---")
+        if is_border:
+            st.warning("⚠️ Borderline case - lower model confidence")
         st.markdown(f"### {action_emoji} Recommended Action")
         st.markdown(f"## {action}")
         st.caption(reason)

@@ -4,11 +4,10 @@ import numpy as np
 import joblib
 import shap
 import matplotlib.pyplot as plt
-from dormancy_check import flag_dormant_accounts
+from decision_engine import get_risk_level, get_recommended_action
 
 st.set_page_config(page_title="MerchantGuard AI", layout="wide")
 
-# Load everything
 @st.cache_resource
 def load_assets():
     model = joblib.load('risk_model.pkl')
@@ -24,7 +23,6 @@ def load_data():
 model, le, feature_cols = load_assets()
 df = load_data()
 df['business_category_encoded'] = le.transform(df['business_category'])
-df = flag_dormant_accounts(df)
 X = df[feature_cols]
 
 explainer = shap.TreeExplainer(model)
@@ -32,7 +30,6 @@ explainer = shap.TreeExplainer(model)
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable merchant risk scoring for Razorpay AI Buildathon 2026")
 
-# Sidebar filters
 st.sidebar.header("Filters")
 risk_filter = st.sidebar.selectbox("Show merchants", ["All", "Risky only", "Safe only"])
 category_filter = st.sidebar.multiselect("Business category", df['business_category'].unique())
@@ -45,31 +42,18 @@ elif risk_filter == "Safe only":
 if category_filter:
     filtered_df = filtered_df[filtered_df['business_category'].isin(category_filter)]
 
-# Top metrics
 col1, col2, col3 = st.columns(3)
 col1.metric("Total Merchants", len(df))
 col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
 col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
-st.divider()
-st.subheader("😴 Dormant / Sleeper Account Risk")
-st.caption("Established accounts with unusually low recent activity — a pattern the main ML model doesn't catch, since it's trained on behavioral risk, not inactivity.")
-dormant_df = df[df['is_dormant_risk']][['merchant_id', 'business_category', 'account_age_days', 'monthly_txn_count', 'volume_growth_rate_30d']]
-if len(dormant_df) > 0:
-    st.dataframe(dormant_df, use_container_width=True)
-else:
-    st.write("No dormant accounts flagged in current data.")
 
 st.divider()
-
-# Merchant table
 st.subheader("Merchant Risk Overview")
 display_cols = ['merchant_id', 'business_category', 'account_age_days',
                  'monthly_txn_volume', 'refund_rate', 'chargeback_rate', 'risk_score', 'is_risky']
 st.dataframe(filtered_df[display_cols].sort_values('risk_score', ascending=False), use_container_width=True)
 
 st.divider()
-
-# Individual merchant explanation
 st.subheader("🔍 Explain a Specific Merchant")
 selected_merchant = st.selectbox("Select merchant ID", filtered_df['merchant_id'].tolist())
 
@@ -77,12 +61,20 @@ if selected_merchant:
     idx = df[df['merchant_id'] == selected_merchant].index[0]
     merchant_row = df.loc[idx]
 
+    risk_level, level_emoji = get_risk_level(merchant_row['risk_score'])
+    action, action_emoji, reason = get_recommended_action(merchant_row['risk_score'], merchant_row['chargeback_rate'])
+
     col1, col2 = st.columns([1, 2])
     with col1:
         st.metric("Risk Score", f"{merchant_row['risk_score']:.1f}/100")
+        st.write(f"**Risk Level:** {level_emoji} {risk_level}")
         st.write(f"**Category:** {merchant_row['business_category']}")
         st.write(f"**Account Age:** {merchant_row['account_age_days']} days")
-        st.write(f"**Status:** {'🔴 Risky' if merchant_row['is_risky'] == 1 else '🟢 Safe'}")
+
+        st.markdown("---")
+        st.markdown(f"### {action_emoji} Recommended Action")
+        st.markdown(f"## {action}")
+        st.caption(reason)
 
     with col2:
         shap_vals = explainer.shap_values(X.iloc[[idx]])
@@ -99,6 +91,11 @@ if selected_merchant:
         ax.set_title(f'Why {selected_merchant} was scored this way')
         plt.tight_layout()
         st.pyplot(fig)
+
+        st.markdown("#### In plain terms:")
+        top_factor = impact_df.iloc[0]
+        direction = "increased" if top_factor['Impact on Risk'] > 0 else "decreased"
+        st.write(f"The biggest driver was **{top_factor['Feature']}** (value: {top_factor['Value']:.2f}), which **{direction}** this merchant's risk score the most.")
 
 st.divider()
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

@@ -222,4 +222,21 @@ else:
     st.success("This range balances detection against review workload reasonably well.")
 
 st.divider()
+
+with st.expander("ℹ️ Model Information"):
+    import json
+    with open('model_metadata.json') as f:
+        meta = json.load(f)
+    mc1, mc2 = st.columns(2)
+    with mc1:
+        st.write(f"**Model:** {meta['model_name']} v{meta['version']}")
+        st.write(f"**Algorithm:** {meta['algorithm']}")
+        st.write(f"**Trained:** {meta['training_date']}")
+        st.write(f"**Dataset:** {meta['dataset']}")
+    with mc2:
+        st.write(f"**Test ROC-AUC:** {meta['roc_auc_test']}")
+        st.write(f"**5-Fold CV ROC-AUC:** {meta['roc_auc_cv_mean']}")
+        st.write(f"**Decision Threshold:** {meta['selected_threshold']}")
+    st.caption(meta['notes'])
+
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

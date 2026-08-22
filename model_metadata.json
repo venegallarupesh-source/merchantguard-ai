@@ -1,0 +1,22 @@
+{
+  "model_name": "MerchantGuard Risk Model",
+  "version": "1.0",
+  "algorithm": "XGBoost Classifier",
+  "training_date": "2026-08-22",
+  "dataset": "Synthetic prototype dataset (2000 merchants)",
+  "feature_list": [
+    "business_category_encoded",
+    "account_age_days",
+    "monthly_txn_count",
+    "avg_transaction_value",
+    "monthly_txn_volume",
+    "refund_rate",
+    "chargeback_rate",
+    "volume_growth_rate_30d",
+    "customer_complaint_count"
+  ],
+  "selected_threshold": 0.13,
+  "roc_auc_test": 0.9492,
+  "roc_auc_cv_mean": 0.9583,
+  "notes": "Threshold optimized against estimated business cost (FN=Rs.50000, FP=Rs.2000), not accuracy alone."
+}

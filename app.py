@@ -46,7 +46,70 @@ col1, col2, col3 = st.columns(3)
 col1.metric("Total Merchants", len(df))
 col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
 col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
+st.divider()
+st.subheader("🆕 Live Merchant Risk Check")
+st.caption("Enter a new merchant's details to get an instant risk assessment")
 
+with st.form("live_check_form"):
+    fc1, fc2, fc3 = st.columns(3)
+    with fc1:
+        in_category = st.selectbox("Business Category", df['business_category'].unique())
+        in_age = st.number_input("Account Age (days)", min_value=0, max_value=5000, value=365)
+        in_txn_count = st.number_input("Monthly Transaction Count", min_value=1, max_value=10000, value=500)
+    with fc2:
+        in_avg_value = st.number_input("Avg Transaction Value (Rs.)", min_value=1.0, max_value=200000.0, value=2000.0)
+        in_refund_rate = st.slider("Refund Rate", 0.0, 1.0, 0.05, 0.01)
+        in_chargeback_rate = st.slider("Chargeback Rate", 0.0, 1.0, 0.02, 0.01)
+    with fc3:
+        in_growth = st.number_input("30-Day Volume Growth Rate (%)", min_value=-100.0, max_value=500.0, value=5.0)
+        in_complaints = st.number_input("Customer Complaint Count", min_value=0, max_value=100, value=1)
+
+    submitted = st.form_submit_button("🔍 ANALYZE MERCHANT")
+
+if submitted:
+    new_merchant = pd.DataFrame([{
+        'business_category': in_category,
+        'account_age_days': in_age,
+        'monthly_txn_count': in_txn_count,
+        'avg_transaction_value': in_avg_value,
+        'monthly_txn_volume': in_txn_count * in_avg_value,
+        'refund_rate': in_refund_rate,
+        'chargeback_rate': in_chargeback_rate,
+        'volume_growth_rate_30d': in_growth,
+        'customer_complaint_count': in_complaints
+    }])
+    new_merchant['business_category_encoded'] = le.transform(new_merchant['business_category'])
+    new_X = new_merchant[feature_cols]
+
+    proba = model.predict_proba(new_X)[0, 1]
+    new_score = proba * 100
+    level, level_emoji = get_risk_level(new_score)
+    action, action_emoji, reason = get_recommended_action(new_score, in_chargeback_rate)
+
+    rc1, rc2 = st.columns([1, 2])
+    with rc1:
+        st.metric("Risk Score", f"{new_score:.1f}/100")
+        st.write(f"**Risk Level:** {level_emoji} {level}")
+        st.markdown("---")
+        st.markdown(f"### {action_emoji} Recommended Action")
+        st.markdown(f"## {action}")
+        st.caption(reason)
+
+    with rc2:
+        new_shap = explainer.shap_values(new_X)
+        impact_df = pd.DataFrame({
+            'Feature': feature_cols,
+            'Value': new_X.iloc[0].values,
+            'Impact on Risk': new_shap[0]
+        }).sort_values('Impact on Risk', key=abs, ascending=False)
+
+        fig, ax = plt.subplots(figsize=(8, 4))
+        colors = ['red' if x > 0 else 'green' for x in impact_df['Impact on Risk']]
+        ax.barh(impact_df['Feature'], impact_df['Impact on Risk'], color=colors)
+        ax.set_xlabel('Impact on Risk Score')
+        ax.set_title('Why this merchant was scored this way')
+        plt.tight_layout()
+        st.pyplot(fig)
 st.divider()
 st.subheader("Merchant Risk Overview")
 display_cols = ['merchant_id', 'business_category', 'account_age_days',

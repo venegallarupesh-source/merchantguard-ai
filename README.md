@@ -40,7 +40,7 @@ Payment platforms like Razorpay onboard thousands of merchants. Some pose risk â
 
 MerchantGuard AI scores every merchant's risk (0-100), explains why each score was given, converts that score into a recommended action, and lets an analyst check any new merchant in real time â€” all backed by explainable AI, not a black box.
 
-
+![Architecture](architecture_diagram.png)
 
 \## How It Works
 

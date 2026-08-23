@@ -115,6 +115,25 @@ with tab1:
 with tab2:
     st.subheader("Merchant Portfolio Overview")
 
+    high_risk_count = int((df['risk_score'] > 75).sum())
+    avg_score = df['risk_score'].mean()
+
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.markdown("##### 🏢 Total Merchants")
+        st.markdown(f"# {len(df)}")
+    with col2:
+        st.markdown("##### 🚩 Flagged Risky")
+        st.markdown(f"# {int(df['is_risky'].sum())}")
+    with col3:
+        st.markdown("##### 🔴 Critical Cases")
+        st.markdown(f"# {high_risk_count}")
+    with col4:
+        st.markdown("##### 📊 Avg Risk Score")
+        st.markdown(f"# {avg_score:.0f}")
+
+    st.divider()
+
     risk_filter = st.selectbox("Show merchants", ["All", "Risky only", "Safe only"])
     category_filter = st.multiselect("Filter by business category", df['business_category'].unique())
 
@@ -125,11 +144,6 @@ with tab2:
         filtered_df = filtered_df[filtered_df['is_risky'] == 0]
     if category_filter:
         filtered_df = filtered_df[filtered_df['business_category'].isin(category_filter)]
-
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Total Merchants", len(df))
-    col2.metric("Flagged as Risky", int(df['is_risky'].sum()))
-    col3.metric("Risk Rate", f"{df['is_risky'].mean()*100:.1f}%")
 
     display_cols = ['merchant_id', 'business_category', 'account_age_days',
                      'monthly_txn_volume', 'refund_rate', 'chargeback_rate', 'risk_score', 'is_risky']

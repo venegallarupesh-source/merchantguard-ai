@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import json
 from sklearn.model_selection import train_test_split
 from decision_engine import get_risk_level, get_recommended_action
+from investigation_report import generate_investigation_report
 
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
 
@@ -100,12 +101,12 @@ with tab1:
             st.caption(reason)
         with rc2:
             new_shap = explainer.shap_values(new_X)
-            impact_df = pd.DataFrame({
+            impact_df_live = pd.DataFrame({
                 'Feature': feature_cols, 'Value': new_X.iloc[0].values, 'Impact on Risk': new_shap[0]
             }).sort_values('Impact on Risk', key=abs, ascending=False)
             fig, ax = plt.subplots(figsize=(8, 4))
-            colors = ['red' if x > 0 else 'green' for x in impact_df['Impact on Risk']]
-            ax.barh(impact_df['Feature'], impact_df['Impact on Risk'], color=colors)
+            colors = ['red' if x > 0 else 'green' for x in impact_df_live['Impact on Risk']]
+            ax.barh(impact_df_live['Feature'], impact_df_live['Impact on Risk'], color=colors)
             ax.set_xlabel('Impact on Risk Score')
             ax.set_title('Why this merchant was scored this way')
             plt.tight_layout()
@@ -173,6 +174,19 @@ with tab3:
             top_factor = impact_df.iloc[0]
             direction = "increased" if top_factor['Impact on Risk'] > 0 else "decreased"
             st.write(f"The biggest driver was **{top_factor['Feature']}** (value: {top_factor['Value']:.2f}), which **{direction}** this merchant's risk score the most.")
+
+        st.divider()
+        st.markdown("### 📋 AI Investigation Report")
+        findings, summary = generate_investigation_report(
+            selected_merchant, merchant_row['risk_score'], risk_level, action,
+            impact_df, merchant_row['chargeback_rate'], merchant_row['refund_rate'],
+            merchant_row['volume_growth_rate_30d']
+        )
+        st.markdown(f"**Merchant:** {selected_merchant} | **Risk Score:** {merchant_row['risk_score']:.1f}/100 | **Level:** {risk_level}")
+        st.markdown("**Evidence Found:**")
+        for f in findings:
+            st.markdown(f"- {f}")
+        st.info(f"**AI Recommendation:** {action}\n\n{summary}")
 
 with tab4:
     st.subheader("Threshold Trade-off & Business Cost")

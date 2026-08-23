@@ -52,10 +52,13 @@ MerchantGuard AI scores every merchant's risk (0-100), explains why each score w
 
 4\. \*\*Decision Engine\*\* — Converts raw risk scores into clear recommended actions (Approve / Monitor / Manual Review / Enhanced Investigation), with business-rule escalation for extreme chargeback patterns
 
-5\. \*\*Live Risk Check\*\* — Enter any new merchant's details and get an instant score, explanation, and recommended action — not limited to pre-loaded data
-
-6\. \*\*Business Impact Dashboard\*\* — Interactive threshold slider showing the real trade-off between catching risk and generating false alarms, tied to estimated business cost
-
+5. **Live Risk Check** — Enter any new merchant's details and get an instant score, explanation, and recommended action — not limited to pre-loaded data
+6. **Business Impact Dashboard** — Interactive threshold slider showing the real trade-off between catching risk and generating false alarms, tied to estimated business cost
+7. **AI Investigation Report** — Converts the model's feature-level evidence into an analyst-friendly investigation summary
+8. **Human-in-the-Loop Decision** — Analysts can approve the AI recommendation or override it with a documented reason
+9. **Audit Trail** — Analyst decisions, overrides, reasons, and timestamps are recorded for traceability
+10. **Dormancy Detection** — A rule-based check flags established accounts with unusually low recent activity, a "sleeper account" pattern the ML model isn't trained to catch
+11. **Risk Trend** — An illustrative trend visualization demonstrates how behavioral deterioration could be monitored over time; clearly labeled as simulated in this prototype
 
 
 \## Tech Stack
@@ -92,8 +95,7 @@ The model was stress-tested against deliberately unusual merchant profiles:
 
 \- Correctly passed a "high-risk category" (Crypto/Trading) merchant with clean behavior - confirming the model judges actual behavior, not category stereotypes
 
-\- \*\*Known limitation:\*\* Dormant, zero-activity merchants score as low-risk. In production, this would need a separate "sleeper account" monitoring layer, since fraud rings sometimes hold accounts inactive before use.
-
+- **Known limitation (addressed):** The core ML model, trained on behavioral risk, initially scored dormant zero-activity merchants as low-risk. This was closed with a separate rule-based dormancy detector that flags established accounts with unusually low recent activity — a "sleeper account" pattern fraud rings sometimes exploit, and one the main model was never designed to catch.
 
 
 \## Scope

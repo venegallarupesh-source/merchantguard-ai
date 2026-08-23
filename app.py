@@ -10,7 +10,17 @@ from decision_engine import get_risk_level, get_recommended_action
 from investigation_report import generate_investigation_report
 
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
-
+st.markdown("""
+<style>
+    h1 { font-size: 2.2rem !important; }
+    h2 { font-size: 1.6rem !important; }
+    h3 { font-size: 1.2rem !important; }
+    .stTabs [data-baseweb="tab"] { font-size: 1rem; font-weight: 600; padding: 10px 16px; }
+    div[data-testid="stMetricValue"] { font-size: 1.8rem; }
+    .stAlert { border-radius: 8px; }
+    hr { margin: 1.5rem 0; }
+</style>
+""", unsafe_allow_html=True)
 @st.cache_resource
 def load_assets():
     model = joblib.load('risk_model.pkl')
@@ -27,6 +37,9 @@ df = load_data()
 df['business_category_encoded'] = le.transform(df['business_category'])
 X = df[feature_cols]
 explainer = shap.TreeExplainer(model)
+
+if 'audit_log' not in st.session_state:
+    st.session_state.audit_log = []
 
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable merchant risk scoring and decision support | Razorpay AI Buildathon 2026")
@@ -226,8 +239,11 @@ with tab3:
         st.info(f"**AI Recommendation:** {action}\n\n{summary}")
 
         st.divider()
-        st.markdown("### 👤 Human Decision")
-        st.caption("The AI recommends an action - a human analyst makes the final call.")
+        st.markdown("### 👤 Analyst Decision")
+        st.caption("The AI recommends an action - a human analyst makes the final call. Every decision is logged to the audit trail.")
+
+        st.write(f"**AI Recommendation:** {action}")
+        st.write(f"**AI Risk Score:** {merchant_row['risk_score']:.0f}/100")
 
         decision_key = f"decision_{selected_merchant}"
         override_key = f"override_{selected_merchant}"
@@ -235,26 +251,53 @@ with tab3:
         dcol1, dcol2 = st.columns(2)
         with dcol1:
             if st.button("✅ Approve AI Recommendation", key=f"approve_{selected_merchant}"):
+                record = {
+                    "Merchant ID": selected_merchant,
+                    "AI Risk Score": f"{merchant_row['risk_score']:.0f}/100",
+                    "AI Recommendation": action,
+                    "Final Analyst Decision": action,
+                    "Reason": "AI recommendation approved as-is",
+                    "Timestamp": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
+                }
+                st.session_state.audit_log.append(record)
                 st.session_state[decision_key] = action
                 st.session_state[override_key] = False
+                st.success("✅ DECISION RECORDED")
+                st.json(record)
         with dcol2:
             if st.button("✏️ Override Decision", key=f"override_btn_{selected_merchant}"):
                 st.session_state[override_key] = True
 
         if st.session_state.get(override_key, False):
             override_options = ["Approve", "Monitor", "Manual Review", "Enhanced Investigation"]
-            new_decision = st.selectbox("Select final action", override_options, key=f"select_{selected_merchant}")
-            override_reason = st.text_input("Reason for override", key=f"reason_{selected_merchant}")
-            if st.button("💾 Save Override", key=f"save_{selected_merchant}"):
+            new_decision = st.selectbox("Final Analyst Action", override_options, key=f"select_{selected_merchant}")
+            override_reason = st.text_input("Reason for decision / override", key=f"reason_{selected_merchant}")
+            if st.button("💾 Save Analyst Decision", key=f"save_{selected_merchant}"):
+                record = {
+                    "Merchant ID": selected_merchant,
+                    "AI Risk Score": f"{merchant_row['risk_score']:.0f}/100",
+                    "AI Recommendation": action,
+                    "Final Analyst Decision": new_decision,
+                    "Reason": override_reason if override_reason else "No reason provided",
+                    "Timestamp": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M")
+                }
+                st.session_state.audit_log.append(record)
                 st.session_state[decision_key] = new_decision
                 st.session_state[f"final_reason_{selected_merchant}"] = override_reason
                 st.session_state[override_key] = False
-                st.success(f"Final decision saved: {new_decision}")
+                st.success("✅ DECISION RECORDED")
+                st.json(record)
 
         if decision_key in st.session_state and not st.session_state.get(override_key, False):
             final = st.session_state[decision_key]
             reason_saved = st.session_state.get(f"final_reason_{selected_merchant}", "")
-            st.success(f"**Final Decision:** {final}" + (f" (Override reason: {reason_saved})" if reason_saved else " (AI recommendation approved)"))
+            st.info(f"**Last Recorded Decision:** {final}" + (f" (Reason: {reason_saved})" if reason_saved else ""))
+
+        if st.session_state.audit_log:
+            st.divider()
+            st.markdown("### 📋 Audit Trail")
+            st.caption("Full history of analyst decisions across all reviewed merchants - every override is traceable with timestamp and reasoning.")
+            st.dataframe(pd.DataFrame(st.session_state.audit_log), use_container_width=True)
 
         st.divider()
         st.markdown("### 📉 Risk Trend (Illustrative)")

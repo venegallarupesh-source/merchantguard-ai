@@ -9,6 +9,16 @@
 🔗 \*\*Live Demo:\*\* https://merchantguard-ai-dzdzbaghveokmqdi5ytwop.streamlit.app/
 
 
+## Screenshots
+
+**Overview Dashboard**
+![Overview](dashboard1.png)
+
+**Explain Merchant with AI Investigation**
+![Explain Merchant](dashboard2.png)
+
+**Business Impact Simulator**
+![Business Impact](dashboard3.png)
 
 \## Data Disclaimer
 

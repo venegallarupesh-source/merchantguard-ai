@@ -1,33 +1,41 @@
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from matplotlib.patches import FancyBboxPatch
 
-fig, ax = plt.subplots(figsize=(6, 10))
+fig, ax = plt.subplots(figsize=(6, 18))
 ax.set_xlim(0, 10)
-ax.set_ylim(0, 16)
+ax.set_ylim(0, 29)
 ax.axis('off')
 
 stages = [
-    ("Merchant Data", "2,000 synthetic profiles", "#5DCAA5"),
-    ("XGBoost Model", "Risk score 0-100, 0.95 AUC", "#85B7EB"),
-    ("SHAP Explainability", "Why each score was given", "#AFA9EC"),
-    ("Streamlit Dashboard", "Interactive risk explorer", "#F0997B"),
-    ("Live Deployment", "Public URL, no setup needed", "#97C459"),
+    ("Merchant Data", "2,000 synthetic merchant profiles", "#E8F1FB"),
+    ("Data Validation & Feature Processing", "Transaction, refund, chargeback,\naccount-age & growth signals", "#F1F5F9"),
+    ("XGBoost Risk Model", "Risk score 0-100", "#DCE8F5"),
+    ("SHAP Explainability", "Why was this merchant flagged?", "#E9E3F5"),
+    ("Decision Engine", "Approve / Monitor / Manual Review /\nEnhanced Investigation", "#FFF0E6"),
+    ("AI Investigation Report", "Risk summary + evidence +\nrecommended action", "#FFF7E6"),
+    ("Human Analyst Decision", "Accept recommendation or\noverride with reason", "#E8F5ED"),
+    ("Audit Trail", "Final decision + reason + timestamp", "#EAF4F4"),
+    ("Streamlit Dashboard & Live Deployment", "Interactive risk management system", "#DCE8F5"),
 ]
 
-y_positions = [14, 11, 8, 5, 2]
+text_color = "#1B2A4A"
+n = len(stages)
+y_positions = [26 - i * 3 for i in range(n)]
 
 for (title, subtitle, color), y in zip(stages, y_positions):
-    box = FancyBboxPatch((1, y - 0.7), 8, 1.4, boxstyle="round,pad=0.1",
-                          facecolor=color, edgecolor='black', linewidth=0.5)
+    box = FancyBboxPatch((1, y - 1.1), 8, 2.2, boxstyle="round,pad=0.1",
+                          facecolor=color, edgecolor=text_color, linewidth=0.8)
     ax.add_patch(box)
-    ax.text(5, y + 0.15, title, ha='center', va='center', fontsize=13, fontweight='bold')
-    ax.text(5, y - 0.35, subtitle, ha='center', va='center', fontsize=10)
-    if y != 2:
-        ax.annotate('', xy=(5, y - 1.5), xytext=(5, y - 0.7),
+    ax.text(5, y + 0.35, title, ha='center', va='center',
+            fontsize=12, fontweight='bold', color=text_color)
+    ax.text(5, y - 0.45, subtitle, ha='center', va='center',
+            fontsize=9, color=text_color)
+    if y != y_positions[-1]:
+        ax.annotate('', xy=(5, y - 1.9), xytext=(5, y - 1.1),
                      arrowprops=dict(arrowstyle='->', lw=1.5, color='black'))
 
-plt.title("MerchantGuard AI - Architecture", fontsize=15, fontweight='bold', pad=20)
+plt.title("MerchantGuard AI - Architecture", fontsize=16, fontweight='bold',
+          color=text_color, pad=20)
 plt.tight_layout()
 plt.savefig('architecture_diagram.png', dpi=150, bbox_inches='tight')
 print("Saved architecture_diagram.png")

@@ -12,67 +12,98 @@ from investigation_report import generate_investigation_report
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
 st.markdown("""
 <style>
-    /* Base fintech palette */
     :root {
-        --navy: #1B2A4A;
-        --navy-light: #2D4373;
-        --bg-light: #F7F8FA;
+        --page-bg: #F6F8FC;
         --card-bg: #FFFFFF;
-        --text-dark: #1A1A1A;
-        --green: #1E8E3E;
-        --amber: #E8A33D;
-        --red: #D33B3B;
+        --navy: #1E3A5F;
+        --navy-hover: #16324F;
+        --active-blue: #2563EB;
+        --text-main: #334155;
+        --text-secondary: #64748B;
+        --border: #E2E8F0;
+        --low-bg: #DCFCE7; --low-text: #15803D;
+        --med-bg: #FEF3C7; --med-text: #B45309;
+        --high-bg: #FFEDD5; --high-text: #C2410C;
+        --crit-bg: #FEE2E2; --crit-text: #DC2626;
     }
+
+    .stApp { background-color: var(--page-bg); }
 
     h1 { font-size: 2.2rem !important; color: var(--navy) !important; }
     h2 { font-size: 1.6rem !important; color: var(--navy) !important; }
-    h3 { font-size: 1.2rem !important; color: var(--navy-light) !important; }
+    h3 { font-size: 1.2rem !important; color: var(--navy) !important; }
+    p, span, label, .stMarkdown { color: var(--text-main); }
+    .stCaption, [data-testid="stCaptionContainer"] { color: var(--text-secondary) !important; }
 
     .stTabs [data-baseweb="tab"] {
         font-size: 1rem;
         font-weight: 600;
         padding: 10px 16px;
-        color: var(--navy);
+        color: var(--text-secondary);
     }
     .stTabs [aria-selected="true"] {
         color: var(--navy) !important;
-        border-bottom-color: var(--navy) !important;
+        border-bottom: 3px solid var(--active-blue) !important;
     }
 
     div[data-testid="stMetricValue"] {
         font-size: 1.8rem;
         color: var(--navy);
     }
-
     div[data-testid="stMetric"] {
         background-color: var(--card-bg);
-        border: 1px solid #E5E7EB;
-        border-radius: 10px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
         padding: 12px 16px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
 
-    .stAlert { border-radius: 8px; }
-    hr { margin: 1.5rem 0; border-color: #E5E7EB; }
+    .stAlert { border-radius: 10px; }
+    hr { margin: 1.5rem 0; border-color: var(--border); }
 
     .stButton > button {
         border-radius: 8px;
         border: 1px solid var(--navy);
         color: var(--navy);
         font-weight: 600;
+        background-color: white;
     }
     .stButton > button:hover {
         background-color: var(--navy);
         color: white;
+        border-color: var(--navy);
     }
 
-    .stFormSubmitButton > button {
-        background-color: var(--navy);
-        color: white;
-        border-radius: 8px;
-        font-weight: 600;
+    div[data-testid="stFormSubmitButton"] button {
+        background-color: var(--navy) !important;
+        color: white !important;
+        border: 1px solid var(--navy) !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        padding: 0.6rem 1.5rem !important;
     }
-    .stFormSubmitButton > button:hover {
-        background-color: var(--navy-light);
+    div[data-testid="stFormSubmitButton"] button:hover {
+        background-color: var(--navy-hover) !important;
+        border-color: var(--navy-hover) !important;
+    }
+    div[data-testid="stFormSubmitButton"] button p {
+        color: white !important;
+    }
+
+    div[data-baseweb="input"], div[data-baseweb="select"] > div {
+        background-color: #F8FAFC;
+        border-color: #CBD5E1 !important;
+        border-radius: 8px;
+    }
+    div[data-baseweb="input"]:focus-within, div[data-baseweb="select"] > div:focus-within {
+        border-color: var(--active-blue) !important;
+    }
+
+    div[data-testid="stJson"] {
+        background-color: #F8FAFC;
+        border-left: 4px solid var(--active-blue);
+        border-radius: 6px;
+        padding: 10px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -163,10 +194,10 @@ with tab1:
             st.markdown(f"## {score_color} Risk Score: {new_score:.1f}/100")
             st.write(f"**Risk Level:** {level_emoji} {level}")
             confidence = abs(proba - 0.5) * 2 * 100
-            st.write(f"**Model Confidence:** {confidence:.0f}%")
+            st.write(f"**Prediction Certainty:** {confidence:.0f}%")
             st.markdown("---")
             if is_border:
-                st.warning("⚠️ Borderline case - lower model confidence")
+                st.warning("⚠️ Borderline case - lower prediction certainty")
             st.markdown(f"### {action_emoji} Recommended Action")
             st.markdown(f"## {action}")
             st.caption(reason)
@@ -237,12 +268,12 @@ with tab3:
             st.write(f"**Risk Level:** {level_emoji} {risk_level}")
             merchant_proba = merchant_row['risk_score'] / 100
             confidence2 = abs(merchant_proba - 0.5) * 2 * 100
-            st.write(f"**Model Confidence:** {confidence2:.0f}%")
+            st.write(f"**Prediction Certainty:** {confidence2:.0f}%")
             st.write(f"**Category:** {merchant_row['business_category']}")
             st.write(f"**Account Age:** {merchant_row['account_age_days']} days")
             st.markdown("---")
             if is_border:
-                st.warning("⚠️ Borderline case - lower model confidence")
+                st.warning("⚠️ Borderline case - lower prediction certainty")
             st.markdown(f"### {action_emoji} Recommended Action")
             st.markdown(f"## {action}")
             st.caption(reason)

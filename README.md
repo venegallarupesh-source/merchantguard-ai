@@ -1,5 +1,5 @@
 \# 🛡️ MerchantGuard AI
-
+![Python](https://img.shields.io/badge/Python-3.14-blue) ![Streamlit](https://img.shields.io/badge/Streamlit-1.62-red) ![XGBoost](https://img.shields.io/badge/XGBoost-3.4-green) ![SHAP](https://img.shields.io/badge/SHAP-explainable--AI-purple)
 
 
 \*\*Explainable AI-powered merchant risk scoring and decision support system\*\* — built for Razorpay's AI Buildathon 2026 (AI Risk Manager track).

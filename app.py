@@ -93,6 +93,8 @@ with tab1:
             score_color = "🔴" if new_score > 75 else "🟠" if new_score > 50 else "🟡" if new_score > 25 else "🟢"
             st.markdown(f"## {score_color} Risk Score: {new_score:.1f}/100")
             st.write(f"**Risk Level:** {level_emoji} {level}")
+            confidence = abs(proba - 0.5) * 2 * 100
+            st.write(f"**Model Confidence:** {confidence:.0f}%")
             st.markdown("---")
             if is_border:
                 st.warning("⚠️ Borderline case - lower model confidence")
@@ -164,6 +166,9 @@ with tab3:
             score_color = "🔴" if merchant_row['risk_score'] > 75 else "🟠" if merchant_row['risk_score'] > 50 else "🟡" if merchant_row['risk_score'] > 25 else "🟢"
             st.markdown(f"## {score_color} Risk Score: {merchant_row['risk_score']:.1f}/100")
             st.write(f"**Risk Level:** {level_emoji} {risk_level}")
+            merchant_proba = merchant_row['risk_score'] / 100
+            confidence2 = abs(merchant_proba - 0.5) * 2 * 100
+            st.write(f"**Model Confidence:** {confidence2:.0f}%")
             st.write(f"**Category:** {merchant_row['business_category']}")
             st.write(f"**Account Age:** {merchant_row['account_age_days']} days")
             st.markdown("---")
@@ -188,6 +193,24 @@ with tab3:
             top_factor = impact_df.iloc[0]
             direction = "increased" if top_factor['Impact on Risk'] > 0 else "decreased"
             st.write(f"The biggest driver was **{top_factor['Feature']}** (value: {top_factor['Value']:.2f}), which **{direction}** this merchant's risk score the most.")
+
+            st.markdown("#### Top Risk Factors")
+            feature_explanations = {
+                'chargeback_rate': 'Higher chargeback rates strongly signal fraud or dissatisfaction.',
+                'refund_rate': 'Elevated refunds indicate order or quality issues.',
+                'volume_growth_rate_30d': 'Sudden volume spikes are a classic risk pattern.',
+                'customer_complaint_count': 'More complaints directly raise risk concerns.',
+                'account_age_days': 'Newer accounts carry less trust history.',
+                'monthly_txn_volume': 'Unusual transaction volume can signal abnormal activity.',
+                'monthly_txn_count': 'Transaction frequency patterns affect risk assessment.',
+                'avg_transaction_value': 'Unusually high average ticket sizes add risk.',
+                'business_category_encoded': 'Some categories carry inherently different baseline risk.'
+            }
+            top4 = impact_df.head(4).copy()
+            top4['Reason'] = top4['Feature'].map(feature_explanations)
+            top4['Effect'] = top4['Impact on Risk'].apply(lambda x: '🔴 Increases risk' if x > 0 else '🟢 Decreases risk')
+            display_table = top4[['Feature', 'Effect', 'Reason']]
+            st.table(display_table)
 
         st.divider()
         st.markdown("### 📋 AI Investigation Report")

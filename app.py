@@ -188,6 +188,26 @@ with tab3:
             st.markdown(f"- {f}")
         st.info(f"**AI Recommendation:** {action}\n\n{summary}")
 
+        st.divider()
+        st.markdown("### 📉 Risk Trend (Illustrative)")
+        st.caption("Simulated 6-month trend based on this merchant's current risk profile - for demo purposes, not historical data.")
+
+        np.random.seed(hash(selected_merchant) % 1000)
+        current = merchant_row['risk_score']
+        months = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Current']
+        trend = np.linspace(max(current - 40, 0), current, 6) + np.random.normal(0, 5, 6)
+        trend = np.clip(trend, 0, 100)
+        trend[-1] = current
+
+        fig2, ax2 = plt.subplots(figsize=(8, 3))
+        ax2.plot(months, trend, marker='o', color='#D85A30', linewidth=2)
+        ax2.axhline(65, color='gray', linestyle='--', alpha=0.5, label='Risk threshold zone')
+        ax2.set_ylabel('Risk Score')
+        ax2.set_title(f'{selected_merchant} - Risk Trend Over Time')
+        ax2.legend()
+        plt.tight_layout()
+        st.pyplot(fig2)
+
 with tab4:
     st.subheader("Threshold Trade-off & Business Cost")
     st.caption("Adjust the risk threshold to see the trade-off between catching risk and false alarms")

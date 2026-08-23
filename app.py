@@ -189,6 +189,37 @@ with tab3:
         st.info(f"**AI Recommendation:** {action}\n\n{summary}")
 
         st.divider()
+        st.markdown("### 👤 Human Decision")
+        st.caption("The AI recommends an action - a human analyst makes the final call.")
+
+        decision_key = f"decision_{selected_merchant}"
+        override_key = f"override_{selected_merchant}"
+
+        dcol1, dcol2 = st.columns(2)
+        with dcol1:
+            if st.button("✅ Approve AI Recommendation", key=f"approve_{selected_merchant}"):
+                st.session_state[decision_key] = action
+                st.session_state[override_key] = False
+        with dcol2:
+            if st.button("✏️ Override Decision", key=f"override_btn_{selected_merchant}"):
+                st.session_state[override_key] = True
+
+        if st.session_state.get(override_key, False):
+            override_options = ["Approve", "Monitor", "Manual Review", "Enhanced Investigation"]
+            new_decision = st.selectbox("Select final action", override_options, key=f"select_{selected_merchant}")
+            override_reason = st.text_input("Reason for override", key=f"reason_{selected_merchant}")
+            if st.button("💾 Save Override", key=f"save_{selected_merchant}"):
+                st.session_state[decision_key] = new_decision
+                st.session_state[f"final_reason_{selected_merchant}"] = override_reason
+                st.session_state[override_key] = False
+                st.success(f"Final decision saved: {new_decision}")
+
+        if decision_key in st.session_state and not st.session_state.get(override_key, False):
+            final = st.session_state[decision_key]
+            reason_saved = st.session_state.get(f"final_reason_{selected_merchant}", "")
+            st.success(f"**Final Decision:** {final}" + (f" (Override reason: {reason_saved})" if reason_saved else " (AI recommendation approved)"))
+
+        st.divider()
         st.markdown("### 📉 Risk Trend (Illustrative)")
         st.caption("Simulated 6-month trend based on this merchant's current risk profile - for demo purposes, not historical data.")
 

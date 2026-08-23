@@ -12,15 +12,71 @@ from investigation_report import generate_investigation_report
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
 st.markdown("""
 <style>
-    h1 { font-size: 2.2rem !important; }
-    h2 { font-size: 1.6rem !important; }
-    h3 { font-size: 1.2rem !important; }
-    .stTabs [data-baseweb="tab"] { font-size: 1rem; font-weight: 600; padding: 10px 16px; }
-    div[data-testid="stMetricValue"] { font-size: 1.8rem; }
+    /* Base fintech palette */
+    :root {
+        --navy: #1B2A4A;
+        --navy-light: #2D4373;
+        --bg-light: #F7F8FA;
+        --card-bg: #FFFFFF;
+        --text-dark: #1A1A1A;
+        --green: #1E8E3E;
+        --amber: #E8A33D;
+        --red: #D33B3B;
+    }
+
+    h1 { font-size: 2.2rem !important; color: var(--navy) !important; }
+    h2 { font-size: 1.6rem !important; color: var(--navy) !important; }
+    h3 { font-size: 1.2rem !important; color: var(--navy-light) !important; }
+
+    .stTabs [data-baseweb="tab"] {
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 10px 16px;
+        color: var(--navy);
+    }
+    .stTabs [aria-selected="true"] {
+        color: var(--navy) !important;
+        border-bottom-color: var(--navy) !important;
+    }
+
+    div[data-testid="stMetricValue"] {
+        font-size: 1.8rem;
+        color: var(--navy);
+    }
+
+    div[data-testid="stMetric"] {
+        background-color: var(--card-bg);
+        border: 1px solid #E5E7EB;
+        border-radius: 10px;
+        padding: 12px 16px;
+    }
+
     .stAlert { border-radius: 8px; }
-    hr { margin: 1.5rem 0; }
+    hr { margin: 1.5rem 0; border-color: #E5E7EB; }
+
+    .stButton > button {
+        border-radius: 8px;
+        border: 1px solid var(--navy);
+        color: var(--navy);
+        font-weight: 600;
+    }
+    .stButton > button:hover {
+        background-color: var(--navy);
+        color: white;
+    }
+
+    .stFormSubmitButton > button {
+        background-color: var(--navy);
+        color: white;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .stFormSubmitButton > button:hover {
+        background-color: var(--navy-light);
+    }
 </style>
 """, unsafe_allow_html=True)
+
 @st.cache_resource
 def load_assets():
     model = joblib.load('risk_model.pkl')

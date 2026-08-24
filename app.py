@@ -129,8 +129,7 @@ if 'audit_log' not in st.session_state:
     st.session_state.audit_log = []
 
 st.title("🛡️ MerchantGuard AI")
-st.caption("Explainable merchant risk scoring and decision support | Razorpay AI Buildathon 2026")
-
+st.caption("Explainable AI for early detection of chargeback-driven merchant financial risk | Razorpay AI Buildathon 2026")
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "🆕 Live Risk Check", "📊 Overview", "🔍 Explain Merchant", "📈 Business Impact", "ℹ️ Model Info"
 ])

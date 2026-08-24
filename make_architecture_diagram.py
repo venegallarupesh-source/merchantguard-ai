@@ -9,7 +9,7 @@ ax.axis('off')
 stages = [
     ("Merchant Data", "2,000 synthetic merchant profiles", "#E8F1FB"),
     ("Data Validation & Feature Processing", "Transaction, refund, chargeback,\naccount-age & growth signals", "#F1F5F9"),
-    ("XGBoost Risk Model", "Risk score 0-100", "#DCE8F5"),
+    ("XGBoost Chargeback-Risk Model", "Risk score 0-100", "#DCE8F5"),
     ("SHAP Explainability", "Why was this merchant flagged?", "#E9E3F5"),
     ("Decision Engine", "Approve / Monitor / Manual Review /\nEnhanced Investigation", "#FFF0E6"),
     ("AI Investigation Report", "Risk summary + evidence +\nrecommended action", "#FFF7E6"),

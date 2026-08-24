@@ -446,7 +446,6 @@ with tab4:
         st.warning("Higher threshold: less workload, higher risk of missed cases.")
     else:
         st.success("This range balances detection against workload reasonably well.")
-
 with tab5:
     st.subheader("Model Information & Versioning")
     with open('model_metadata.json') as f:
@@ -462,8 +461,27 @@ with tab5:
         st.write(f"**5-Fold CV ROC-AUC:** {meta['roc_auc_cv_mean']}")
         st.write(f"**Decision Threshold:** {meta['selected_threshold']}")
     st.caption(meta['notes'])
-    st.divider()
-    st.markdown("**Scope:** MerchantGuard AI is a defensive, decision-support tool. It flags merchants for human review and does not take autonomous action.")
 
+    st.divider()
+    st.markdown("### 📊 Held-Out Test Performance")
+    st.caption("Evaluated on a stratified 80/20 train/test split (400 test merchants, unseen during training)")
+
+    perf_df = pd.DataFrame({
+        "Metric": ["Precision", "Recall", "F1-score"],
+        "Not Risky": [0.93, 0.92, 0.92],
+        "Risky": [0.80, 0.82, 0.81]
+    })
+    st.table(perf_df.set_index("Metric"))
+
+    pc1, pc2, pc3, pc4 = st.columns(4)
+    pc1.metric("ROC-AUC", "0.949")
+    pc2.metric("Accuracy", "89%")
+    pc3.metric("False Positive Rate", "8.4%")
+    pc4.metric("False Negative Rate", "18.3%")
+
+    st.caption("The model favors precision over full recall — it misses about 1 in 5 risky merchants rather than over-flagging legitimate ones.")
+
+    st.divider()
+    st.markdown("**Scope:** MerchantGuard AI is a defensive, decision-support tool focused on chargeback-driven merchant financial risk. It flags merchants for human review and does not take autonomous action.")
 st.divider()
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

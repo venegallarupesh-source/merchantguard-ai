@@ -54,7 +54,7 @@ Python, XGBoost, SHAP, Streamlit, Pandas, Scikit-learn
 
 ## Held-Out Test Performance
 
-Evaluated on a stratified 80/20 train/test split (400 test merchants, unseen during training):
+Evaluated on a stratified 80/20 train/test split of the synthetic dataset (400 test merchants, unseen during training):
 
 | Metric | Not Risky | Risky |
 |---|---|---|

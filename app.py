@@ -463,7 +463,7 @@ with tab5:
 
     st.divider()
     st.markdown("### 📊 Held-Out Test Performance")
-    st.caption("Evaluated on a stratified 80/20 train/test split (400 test merchants, unseen during training)")
+    st.caption("Evaluated on a stratified 80/20 train/test split of the synthetic dataset (400 test merchants, unseen during training)")
 
     perf_df = pd.DataFrame({
         "Metric": ["Precision", "Recall", "F1-score"],

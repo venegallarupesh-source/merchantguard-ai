@@ -8,7 +8,7 @@ import json
 from sklearn.model_selection import train_test_split
 from decision_engine import get_risk_level, get_recommended_action
 from investigation_report import generate_investigation_report
-
+from drift_monitor import run_drift_report
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
 st.markdown("""
 <style>
@@ -130,8 +130,8 @@ if 'audit_log' not in st.session_state:
 
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable AI for early detection of chargeback-driven merchant financial risk | Razorpay AI Buildathon 2026")
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    "🆕 Live Risk Check", "📊 Overview", "🔍 Explain Merchant", "📈 Business Impact", "ℹ️ Model Info"
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "🆕 Live Risk Check", "📊 Overview", "🔍 Explain Merchant", "📈 Business Impact", "ℹ️ Model Info", "📊 Model Monitoring"
 ])
 
 with tab1:
@@ -482,5 +482,62 @@ with tab5:
 
     st.divider()
     st.markdown("**Scope:** MerchantGuard AI is a defensive, decision-support tool focused on chargeback-driven merchant financial risk. It flags merchants for human review and does not take autonomous action.")
+with tab6:
+    st.subheader("Model Monitoring & Data Drift Detection")
+    st.caption("Compares the training data distribution against the held-out test set as a proxy for monitoring incoming merchant data over time.")
+
+    @st.cache_data
+    def get_drift_report():
+        df_drift = pd.read_csv('merchant_data.csv')
+        df_drift['business_category_encoded'] = le.transform(df_drift['business_category'])
+        train_d, test_d = train_test_split(df_drift, test_size=0.2, random_state=42, stratify=df_drift['is_risky'])
+        monitor_features = ['chargeback_rate', 'refund_rate', 'monthly_txn_volume', 'volume_growth_rate_30d', 'account_age_days']
+        report = run_drift_report(train_d, test_d, monitor_features)
+        return report, train_d, test_d, monitor_features
+
+    drift_report, train_d, test_d, monitor_features = get_drift_report()
+
+    max_psi = drift_report['PSI'].max()
+    if max_psi < 0.10:
+        health_status, health_emoji = "Healthy", "🟢"
+    elif max_psi < 0.25:
+        health_status, health_emoji = "Review Recommended", "🟡"
+    else:
+        health_status, health_emoji = "Significant Drift", "🔴"
+
+    st.markdown(f"### {health_emoji} Model Health: {health_status}")
+    st.markdown(f"**Overall Drift Status:** Max PSI = {max_psi:.4f}")
+
+    if health_status == "Healthy":
+        st.success("No significant distribution shift detected between training data and the held-out set.")
+    elif health_status == "Review Recommended":
+        st.warning("Some distribution shift detected. Model performance should be reviewed.")
+    else:
+        st.error("Significant distribution shift detected. Threshold recalibration or retraining should be considered.")
+
+    st.divider()
+    st.markdown("### Feature Drift (Population Stability Index)")
+    st.caption("PSI < 0.10 = Low Drift | 0.10-0.25 = Moderate Drift | > 0.25 = Significant Drift")
+    st.dataframe(drift_report, use_container_width=True)
+
+    st.divider()
+    st.markdown("### Distribution Comparison")
+    dcol1, dcol2, dcol3 = st.columns(3)
+    for col, feat, label in zip(
+        [dcol1, dcol2, dcol3],
+        ['chargeback_rate', 'refund_rate', 'monthly_txn_volume'],
+        ['Chargeback Rate', 'Refund Rate', 'Transaction Volume']
+    ):
+        with col:
+            fig, ax = plt.subplots(figsize=(4, 3))
+            ax.hist(train_d[feat], bins=20, alpha=0.5, label='Training', color='#1E3A5F')
+            ax.hist(test_d[feat], bins=20, alpha=0.5, label='Current (Test Set)', color='#2563EB')
+            ax.set_title(label, fontsize=10)
+            ax.legend(fontsize=8)
+            plt.tight_layout()
+            st.pyplot(fig)
+
+    st.divider()
+    st.caption("Note: This prototype uses a train/test split as a proxy for 'training vs current portfolio' since no live production data stream exists yet. In production, this would compare training data against a rolling window of newly onboarded merchants.")
 st.divider()
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

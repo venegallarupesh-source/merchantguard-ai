@@ -22,6 +22,12 @@
 **Model Monitoring & Drift Detection**
 ![Model Monitoring](dashboard5.png)
 
+**Live Risk Check — Instant Scoring**
+![Live Risk Check](dashboard6.png)
+
+**Analyst Decision & Audit Record**
+![Analyst Decision](dashboard7.png)
+
 ## Data Disclaimer
 
 This prototype uses synthetically generated merchant data because real merchant payment and risk data is sensitive and unavailable publicly. Model metrics demonstrate performance on the simulated dataset and should not be interpreted as production performance. With real historical data, this approach would require additional validation, calibration, and drift monitoring before deployment.
@@ -100,7 +106,14 @@ The model was stress-tested against deliberately unusual merchant profiles:
 ## Scope
 
 MerchantGuard AI is strictly a **defensive risk-scoring tool**. It flags merchant behavior for human review - it does not take autonomous action, block transactions, or make final decisions. All outputs are advisory signals for a risk analyst.
+## ⚠️ Limitations
 
+- Training and evaluation use synthetic merchant data
+- Real-world performance may differ from these results
+- Chargeback labels may contain delayed or imbalanced outcomes in production
+- Thresholds require recalibration using real business costs
+- Human review remains necessary for all final decisions
+- Production deployment would require ongoing drift and performance monitoring
 ## 🚀 Production Considerations
 
 This is a buildathon prototype. Moving it toward production would require:
@@ -114,10 +127,9 @@ This is a buildathon prototype. Moving it toward production would require:
 ## Run It Locally
 
 ```bash
-pip install pandas numpy scikit-learn xgboost shap streamlit matplotlib
+pip install -r requirements.txt
 streamlit run app.py
 ```
-
 ## Author
 
 Built solo by Rupesh for Razorpay AI Buildathon 2026.

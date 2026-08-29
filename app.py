@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from decision_engine import get_risk_level, get_recommended_action
 from investigation_report import generate_investigation_report
 from drift_monitor import run_drift_report
+
 st.set_page_config(page_title="MerchantGuard AI", page_icon="🛡️", layout="wide")
 st.markdown("""
 <style>
@@ -130,6 +131,7 @@ if 'audit_log' not in st.session_state:
 
 st.title("🛡️ MerchantGuard AI")
 st.caption("Explainable AI for early detection of chargeback-driven merchant financial risk | Razorpay AI Buildathon 2026")
+
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🆕 Live Risk Check", "📊 Overview", "🔍 Explain Merchant", "📈 Business Impact", "ℹ️ Model Info", "📊 Model Monitoring"
 ])
@@ -171,20 +173,24 @@ with tab1:
                 st.error(f"⚠️ {err}")
             st.stop()
 
-        new_merchant = pd.DataFrame([{
-            'business_category': in_category, 'account_age_days': in_age,
-            'monthly_txn_count': in_txn_count, 'avg_transaction_value': in_avg_value,
-            'monthly_txn_volume': in_txn_count * in_avg_value, 'refund_rate': in_refund_rate,
-            'chargeback_rate': in_chargeback_rate, 'volume_growth_rate_30d': in_growth,
-            'customer_complaint_count': in_complaints
-        }])
-        new_merchant['business_category_encoded'] = le.transform(new_merchant['business_category'])
-        new_X = new_merchant[feature_cols]
+        try:
+            new_merchant = pd.DataFrame([{
+                'business_category': in_category, 'account_age_days': in_age,
+                'monthly_txn_count': in_txn_count, 'avg_transaction_value': in_avg_value,
+                'monthly_txn_volume': in_txn_count * in_avg_value, 'refund_rate': in_refund_rate,
+                'chargeback_rate': in_chargeback_rate, 'volume_growth_rate_30d': in_growth,
+                'customer_complaint_count': in_complaints
+            }])
+            new_merchant['business_category_encoded'] = le.transform(new_merchant['business_category'])
+            new_X = new_merchant[feature_cols]
 
-        proba = model.predict_proba(new_X)[0, 1]
-        new_score = proba * 100
-        level, level_emoji = get_risk_level(new_score)
-        action, action_emoji, reason, is_border = get_recommended_action(new_score, in_chargeback_rate)
+            proba = model.predict_proba(new_X)[0, 1]
+            new_score = proba * 100
+            level, level_emoji = get_risk_level(new_score)
+            action, action_emoji, reason, is_border = get_recommended_action(new_score, in_chargeback_rate)
+        except Exception:
+            st.error("Unable to generate the prediction. Please verify the merchant inputs.")
+            st.stop()
 
         st.divider()
         rc1, rc2 = st.columns([1, 2])
@@ -381,9 +387,45 @@ with tab3:
 
         if st.session_state.audit_log:
             st.divider()
+            st.markdown("### 👥 Analyst Feedback Summary")
+
+            audit_df = pd.DataFrame(st.session_state.audit_log)
+            total_decisions = len(audit_df)
+            accepted = int((audit_df['AI Recommendation'] == audit_df['Final Analyst Decision']).sum())
+            overridden = total_decisions - accepted
+            agreement_pct = (accepted / total_decisions * 100) if total_decisions > 0 else 0
+
+            fcol1, fcol2, fcol3 = st.columns(3)
+            fcol1.metric("Total Decisions", total_decisions)
+            fcol2.metric("AI Recommendation Accepted", accepted)
+            fcol3.metric("AI-Analyst Agreement", f"{agreement_pct:.0f}%")
+
+            if overridden > 0:
+                st.caption(f"{overridden} decision(s) were overridden by the analyst.")
+            st.info("Analyst feedback is recorded for future model evaluation and improvement. This prototype does not automatically retrain the model.")
+
+            st.divider()
             st.markdown("### 📋 Audit Trail")
             st.caption("Full history of analyst decisions across all reviewed merchants - every override is traceable with timestamp and reasoning.")
-            st.dataframe(pd.DataFrame(st.session_state.audit_log), use_container_width=True)
+
+            filter_choice = st.selectbox("Filter", ["All decisions", "Accepted", "Overridden", "High-risk only"], key="audit_filter")
+            display_audit_df = audit_df.copy()
+            if filter_choice == "Accepted":
+                display_audit_df = display_audit_df[display_audit_df['AI Recommendation'] == display_audit_df['Final Analyst Decision']]
+            elif filter_choice == "Overridden":
+                display_audit_df = display_audit_df[display_audit_df['AI Recommendation'] != display_audit_df['Final Analyst Decision']]
+            elif filter_choice == "High-risk only":
+                display_audit_df = display_audit_df[display_audit_df['AI Risk Score'].str.split('/').str[0].astype(float) >= 65]
+
+            st.dataframe(display_audit_df, use_container_width=True)
+
+            csv_data = audit_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Audit Log (CSV)",
+                data=csv_data,
+                file_name="merchantguard_audit_log.csv",
+                mime="text/csv"
+            )
 
         st.divider()
         st.markdown("### 📉 Risk Trend (Illustrative)")
@@ -445,6 +487,7 @@ with tab4:
         st.warning("Higher threshold: less workload, higher risk of missed cases.")
     else:
         st.success("This range balances detection against workload reasonably well.")
+
 with tab5:
     st.subheader("Model Information & Versioning")
     with open('model_metadata.json') as f:
@@ -482,6 +525,7 @@ with tab5:
 
     st.divider()
     st.markdown("**Scope:** MerchantGuard AI is a defensive, decision-support tool focused on chargeback-driven merchant financial risk. It flags merchants for human review and does not take autonomous action.")
+
 with tab6:
     st.subheader("Model Monitoring & Data Drift Detection")
     st.caption("Compares the training data distribution against the held-out test set as a proxy for monitoring incoming merchant data over time.")
@@ -539,5 +583,6 @@ with tab6:
 
     st.divider()
     st.caption("Note: This prototype uses a train/test split as a proxy for 'training vs current portfolio' since no live production data stream exists yet. In production, this would compare training data against a rolling window of newly onboarded merchants.")
+
 st.divider()
 st.caption("Built with XGBoost + SHAP | Razorpay AI Buildathon 2026")

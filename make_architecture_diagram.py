@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
-
-fig, ax = plt.subplots(figsize=(6, 18))
+fig, ax = plt.subplots(figsize=(6, 20))
 ax.set_xlim(0, 10)
-ax.set_ylim(0, 29)
+ax.set_ylim(0, 32)
 ax.axis('off')
 
 stages = [
@@ -14,13 +13,14 @@ stages = [
     ("Decision Engine", "Approve / Monitor / Manual Review /\nEnhanced Investigation", "#FFF0E6"),
     ("AI Investigation Report", "Risk summary + evidence +\nrecommended action", "#FFF7E6"),
     ("Human Analyst Decision", "Accept recommendation or\noverride with reason", "#E8F5ED"),
-    ("Audit Trail", "Final decision + reason + timestamp", "#EAF4F4"),
+        ("Audit Trail + Analyst Feedback", "Final decision + reason + timestamp,\nAI-analyst agreement tracking", "#EAF4F4"),
+    ("Model Monitoring & Drift Detection", "PSI-based drift checks on\nincoming merchant data", "#F1F5F9"),
     ("Streamlit Dashboard & Live Deployment", "Interactive risk management system", "#DCE8F5"),
 ]
 
 text_color = "#1B2A4A"
 n = len(stages)
-y_positions = [26 - i * 3 for i in range(n)]
+y_positions = [29 - i * 3 for i in range(n)]
 
 for (title, subtitle, color), y in zip(stages, y_positions):
     box = FancyBboxPatch((1, y - 1.1), 8, 2.2, boxstyle="round,pad=0.1",

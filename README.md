@@ -16,6 +16,12 @@
 **Business Impact Simulator**
 ![Business Impact](dashboard3.png)
 
+**Analyst Feedback Summary**
+![Analyst Feedback](dashboard4.png)
+
+**Model Monitoring & Drift Detection**
+![Model Monitoring](dashboard5.png)
+
 ## Data Disclaimer
 
 This prototype uses synthetically generated merchant data because real merchant payment and risk data is sensitive and unavailable publicly. Model metrics demonstrate performance on the simulated dataset and should not be interpreted as production performance. With real historical data, this approach would require additional validation, calibration, and drift monitoring before deployment.
@@ -44,9 +50,11 @@ MerchantGuard AI focuses on **chargeback-driven merchant financial loss**. Refun
 6. **Business Impact Dashboard** — Interactive threshold slider showing the real trade-off between catching risk and generating false alarms, tied to estimated business cost
 7. **AI Investigation Report** — Converts the model's feature-level evidence into an analyst-friendly investigation summary
 8. **Human-in-the-Loop Decision** — Analysts can approve the AI recommendation or override it with a documented reason
-9. **Audit Trail** — Analyst decisions, overrides, reasons, and timestamps are recorded for traceability
-10. **Dormancy Detection** — A rule-based check flags established accounts with unusually low recent activity, a "sleeper account" pattern the ML model isn't trained to catch
-11. **Risk Trend** — An illustrative trend visualization demonstrates how behavioral deterioration could be monitored over time; clearly labeled as simulated in this prototype
+9. **Audit Trail** — Analyst decisions, overrides, reasons, and timestamps are recorded for traceability, with filters (All / Accepted / Overridden / High-risk) and CSV export
+10. **Analyst Feedback Summary** — Tracks AI-analyst agreement rate across all reviewed merchants; feedback is recorded for future model evaluation, not automatic retraining
+11. **Dormancy Detection** — A rule-based check flags established accounts with unusually low recent activity, a "sleeper account" pattern the ML model isn't trained to catch
+12. **Risk Trend** — An illustrative trend visualization demonstrates how behavioral deterioration could be monitored over time; clearly labeled as simulated in this prototype
+13. **Model Monitoring** — Population Stability Index (PSI) compares training data against the held-out test set as a proxy for detecting data drift in incoming merchants
 
 ## Tech Stack
 
@@ -93,6 +101,16 @@ The model was stress-tested against deliberately unusual merchant profiles:
 
 MerchantGuard AI is strictly a **defensive risk-scoring tool**. It flags merchant behavior for human review - it does not take autonomous action, block transactions, or make final decisions. All outputs are advisory signals for a risk analyst.
 
+## 🚀 Production Considerations
+
+This is a buildathon prototype. Moving it toward production would require:
+
+- **Real transaction data** — replacing the synthetic dataset with validated, historical merchant data, with appropriate privacy and compliance review
+- **True data drift monitoring** — comparing training data against a live, rolling window of newly onboarded merchants, not a static train/test split
+- **Model retraining pipeline** — a scheduled or trigger-based retraining process informed by analyst feedback and drift signals, with proper versioning and rollback
+- **Calibration** — verifying that predicted probabilities reflect true risk likelihoods, not just rank-ordering
+- **Latency and scale testing** — SHAP explanations are computationally heavier than raw predictions; production use would need caching or approximation strategies at scale
+- **Access control and audit compliance** — role-based access for analysts, and audit trail storage meeting the platform's data retention and compliance requirements
 ## Run It Locally
 
 ```bash

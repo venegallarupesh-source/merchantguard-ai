@@ -120,11 +120,15 @@ def load_assets():
 def load_data():
     return pd.read_csv('merchant_data.csv')
 
+@st.cache_resource
+def load_explainer(_model):
+    return shap.TreeExplainer(_model)
+
 model, le, feature_cols = load_assets()
 df = load_data()
 df['business_category_encoded'] = le.transform(df['business_category'])
 X = df[feature_cols]
-explainer = shap.TreeExplainer(model)
+explainer = load_explainer(model)
 
 if 'audit_log' not in st.session_state:
     st.session_state.audit_log = []
